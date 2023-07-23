@@ -65,4 +65,6 @@ class Estate extends Card {
 	public Estate(String name, Player owner) {
 		super(name, owner);
 		// TODO Auto-generated constructor stub
-	}}
+	}
+	
+}

@@ -4,17 +4,31 @@ import java.util.Set;
 
 // Player.java
 public class Player implements Cell {
+	Scanner scanner;
     private String name;
 	private int row;
 	private int column;
     private Set<Card> hand;
+    private Game game;
 
-    public Player(String name, int row, int column) {
+    //TODO: Use Cell, NOT row and column.
+    public Player(String name, int row, int column, Scanner scanner) {
     	this.name = name;
     	this.row = row;
     	this.column = column;
         this.hand = new HashSet<Card>();
+        this.scanner = scanner;
+        
     }
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
+    public String toString(){return "'" + name.toCharArray()[0] + "'";}
+
+    //Getter methods for row and column
+    public int row(){return row;}
+    public int column(){return column;}
 
     // Getter and Setter methods for 'name'
     public String getName() {
@@ -61,8 +75,6 @@ public class Player implements Cell {
     // Method to handle user input for moving using characters
     // 'w', 'a', 's', 'd', and 'g'
     public void move(Board board) {
-        Scanner scanner = new Scanner(System.in);
-
         System.out.println("Enter a command (w, a, s, d) to Move: ");
         char input = scanner.next().charAt(0);
 
@@ -88,18 +100,20 @@ public class Player implements Cell {
                 System.out.println("Invalid input. Try again.");
                 move(board);
         }
-
-        scanner.close();
 	}
 
     //Checks that the player can move upwards before shifting them
     //Lets them try another direction if they can't move upwards
 	private void moveUp(Board board) {
-    	if (row > 0 && board.getCellAt(row-1, column).isPassable()) {
-    		//board.getCell(this).removePlayer(this);
+        Cell newCell = board.getCellAt(row-1, column);
+    	if (row > 0 && newCell instanceof Path) {
+            Path newPath = (Path)newCell;
+    		newPath.removePlayer(this);
     		System.out.println("You pressed 'w'. Moving up.");
         	row--;
-        	//board.getCell(this).addPlayer(this);
+        	newPath.setPlayer(this);
+        } else if(newCell instanceof EstateCell){
+            moveEstate("up");
         } else {
         	// Don't leave the board
             System.out.println("Up is blocked. Try another diection.");
@@ -155,8 +169,15 @@ public class Player implements Cell {
 
     }
 
+    /**
+     * Move out of the estate.
+     * Direction can either be "left", "right", "up" or "down".
+     */
+    private void moveEstate(String direction){
+
+    }
+
     private Boolean offerGuess() {
-    	Scanner scanner = new Scanner(System.in);
 
         System.out.println("Enter 'g' to make a guess or 's' to offer a solution: ");
         System.out.println("Anything else will be treated as a pass");
@@ -164,27 +185,87 @@ public class Player implements Cell {
 
         switch (input) {
             case 'g':
-            	scanner.close();
                 return makeGuess();
             case 's':
-            	scanner.close();
                 return solutionAttempt();
             default:
-            	scanner.close();
             	return false;
         }
 
 	}
 
-    private Boolean solutionAttempt() {
-    	//TODO implement this
-    	return false;
-	}
+    private Boolean makeGuess() {
+        System.out.println("Enter your guess:");
+        System.out.print("Suspect: ");
+        String suspectName = scanner.next();
+        System.out.print("Weapon: ");
+        String weaponName = scanner.next();
+        System.out.print("Estate: ");
+        String estateName = scanner.next();
 
-	private Boolean makeGuess() {
-		//TODO implement this
-    	return false;
-	}
+        // Create suspect, weapon, and estate cards based on the player's input
+        Suspect suspectCard = new Suspect(suspectName, this);
+        Weapon weaponCard = new Weapon(weaponName, this);
+        Estate estateCard = new Estate(estateName, this);
+
+        // Check if the guess matches the actual solution
+        Boolean correctGuess = checkSolution(suspectCard, weaponCard, estateCard);
+
+        if (correctGuess) {
+            System.out.println("Congratulations! Your guess is correct.");
+        } else {
+            System.out.println("Your guess is incorrect.");
+        }
+
+        return true;
+    }
+
+    // Implement the logic to check if the guess matches the actual solution
+    public Boolean checkSolution(Suspect suspect, Weapon weapon, Estate estate) {
+        // Get the actual solution from the game's globalSolution
+        Suspect actualSuspect = game.getGlobalSolution().getSuspect();
+        Weapon actualWeapon = game.getGlobalSolution().getWeapon();
+        Estate actualEstate = game.getGlobalSolution().getEstate();
+
+        // Compare the player's guess with the actual solution
+        boolean isCorrectSuspect = suspect.equals(actualSuspect);
+        boolean isCorrectWeapon = weapon.equals(actualWeapon);
+        boolean isCorrectEstate = estate.equals(actualEstate);
+
+        // If all three components of the guess match the actual solution, it's correct.
+        return isCorrectSuspect && isCorrectWeapon && isCorrectEstate;
+    }
+
+
+
+    private Boolean solutionAttempt() {
+        System.out.println("Enter your solution:");
+        System.out.print("Suspect: ");
+        String suspectName = scanner.next();
+        System.out.print("Weapon: ");
+        String weaponName = scanner.next();
+        System.out.print("Estate: ");
+        String estateName = scanner.next();
+
+        // Create suspect, weapon, and estate cards based on the player's input
+        Suspect suspectCard = new Suspect(suspectName, this);
+        Weapon weaponCard = new Weapon(weaponName, this);
+        Estate estateCard = new Estate(estateName, this);
+
+        // Check if the solution attempt matches the actual solution
+        Boolean correctSolution = checkSolution(suspectCard, weaponCard, estateCard);
+
+        if (correctSolution) {
+            System.out.println("Congratulations! You successfully solved the mystery.");
+            // Implement the logic to reveal the solution and end the game here
+        } else {
+            System.out.println("Your solution attempt is incorrect.");
+        }
+
+        return true;
+    }
+
+    
 
 	public Boolean turn(Board board, int roll) {
 		//this is a mess. I will clean it up next time I get a chance.
@@ -214,7 +295,7 @@ public class Player implements Cell {
 
 	public static void main(String[] args) {
         // Creating a Player
-        Player player = new Player("John", 0, 0);
+        Player player = new Player("John", 0, 0, null);
 
         // Creating a Suspect card and assigning it to the player
         Suspect suspectCard = new Suspect("Colonel Mustard", player);
@@ -241,6 +322,7 @@ public class Player implements Cell {
             System.out.println(card);
         }
     }
+	
 
 	@Override
 	public Boolean contains(Player p) {

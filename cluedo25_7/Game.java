@@ -56,8 +56,8 @@ public class Game {
         }
     }
     
-    public ArrayList<Player> getPlayers() {
-    	return ArrayList.copyOf(players);
+    public List<Player> getPlayers() {
+    	return List.copyOf(players);
     }
     
     public Player getPlayer(int i) {

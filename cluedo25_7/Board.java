@@ -43,16 +43,14 @@ public class Board {
         estates[0] = new HauntedHouse(this, 2);
         fill(2,2,7,7, new Wall());
         fill(3,3,6,6, estates[0]);
-        // Entrances:
-        // column 6 (x), row 3 (y) [row][column] [y][x] Flip the order.
-        cells[3][6] = new Entrance(null); // Pos on board validated. //Need to change the null.
-        // column 5 (x), row 6 (y) [row][column] [y][x] Flip the order.
-        cells[6][5] = new Entrance( null); // Need to change the null.
+        cells[3][6] = new Entrance(estates[0]);
+        cells[6][5] = new Entrance(estates[0]);
 
         // ******************************************************
         // Manic Manor:
         // ******************************************************
         fill(2,17, 7,22, new Wall());
+        //TODO write Manic Manor
         // Entrances:
         // column 17 (x), row 5 (y) [row][column] [y][x] Flip the order.
         cells[5][17] = new Entrance( null); // Need to change the null.
@@ -63,6 +61,7 @@ public class Board {
         // Calamity Castle:
         // ******************************************************
         fill(17,2,22,7, new Wall());
+        //TODO write Calamity Castle
         // Entrances:
         // column 3 (x), row 17 (y) [row][column] [y][x] Flip the order.
         cells[17][3] = new Entrance(null); // Need to change the null.
@@ -73,6 +72,7 @@ public class Board {
         // Peril Palace:
         // ******************************************************
         fill(17,17,22,22, new Wall());
+        //TODO write Peril Palace:
         // Entrances:
         // column 18 (x), row 17 (y) [row][column] [y][x] Flip the order.
         cells[17][18] = new Entrance( null); // Need to change the null.
@@ -82,6 +82,7 @@ public class Board {
         // ******************************************************
         // Visitation Villa:
         // ******************************************************
+        //TODO write Visitation Villa:
         fill(10,9,14,15, new Wall());
         // column 12 (x), row 10 (y) [row][column] [y][x] Flip the order.
         cells[10][12] = new Entrance( null); // TODO change all the nulls
@@ -123,11 +124,6 @@ public class Board {
                 cells[row][column] = new Wall();
             }
         }
-
-    }
-
-    public void setCell(int row, int col, Estate estate) {
-        cells[row][col] = estate;
     }
 
     /**
@@ -147,40 +143,40 @@ public class Board {
                 }
                 // Haunted House:
                 else if (row == 3 && col == 3) {
-                    // 15 total - 7 word = 8 remaining. So 4 left and 4 right
+                    // 9 total - 7 word = 2 remaining. So 1 left and 1 right
                     boardPrint.append(" Haunted ");
                     col = 6;
                 } else if (row == 4 && col == 3) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append("   House ");
+                    // 9 total - 5 word = 4 remaining. So 2 left and 2 right
+                    boardPrint.append("  House  ");
                     col = 6;
                 } else if (row == 5 && col == 3) {
-                    // 15 total
-                    boardPrint.append("         ");
+                    // 9 total
+                    boardPrint.append(" ".repeat(9));
                     col = 6;
                 }
                 // Manic Manor:
                 else if (row == 3 && col == 18) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
+                    // 9 total - 5 word = 4 remaining. So 2 left and 2 right
                     boardPrint.append("  Manic  ");
                     col = 21;
                 } else if (row == 4 && col == 18) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append(" Manor   ");
+                    // 9 total - 5 word = 4 remaining. So 5 left and 5 right
+                    boardPrint.append("  Manor  ");
                     col = 21;
                 } else if (row == 5 && col == 18) {
-                    // 15 total
-                    boardPrint.append("         ");
+                    // 9 total
+                    boardPrint.append(" ".repeat(9));
                     col = 21;
                 }
                 // Calamity Castle:
                 else if (row == 18 && col == 3) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append(" Calamit ");
+                    // 9 total - 8 word = 1 remaining. So 1 left and 0 right
+                    boardPrint.append(" Calamity");
                     col = 6;
                 } else if (row == 19 && col == 3) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append("Castle   ");
+                    // 9 total - 5 word = 4 remaining. So 2 left and 2 right
+                    boardPrint.append("  Castle  ");
                     col = 6;
                 } else if (row == 20 && col == 3) {
                     // 15 total
@@ -213,7 +209,7 @@ public class Board {
                     boardPrint.append(" Villa      ");
                     col = 14;
                 }
-                boardPrint.append(cells[row][col] + "");
+                boardPrint.append(cells[row][col]);
 
             }
             boardPrint.append("\n");

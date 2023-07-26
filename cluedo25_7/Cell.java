@@ -2,43 +2,19 @@ package cluedo25_7;
 
 public interface Cell {
 
-	public Cell copy();
+	Cell copy();
 
-	public int getRow();
-	
-	public int getColumn();
-
-	public Boolean contains(Player p);
-
-	public Boolean isPassable();
+	Boolean isPassable();
 	void setPlayer(Player player);
 	void removePlayer(Player player);
 }
 
 final class Path implements Cell {
-	private int row;
-	private int column;
 	private Player player;
-
-
-	public Path(int row, int column) {
-		this.row = row;
-		this.column = column;
-	}
 
 	@Override
 	public Cell copy() {
-		return new Path(row, column);
-	}
-
-	@Override
-	public int getRow() {
-		return row;
-	}
-
-	@Override
-	public int getColumn() {
-		return column;
+		return new Path();
 	}
 
 	public void setPlayer(Player p){
@@ -57,27 +33,20 @@ final class Path implements Cell {
 		return player == null;
 	}
 	
-	public Boolean contains(Player p){return player.equals(p);}
-	
 	//public String toString(){return "__|";}
 	public String toString(){
 		if(player != null){
-			return player.toString() + "|";
+			return player + "|";
 		}
 		return "__|";
 	}
 }
 
 final class Entrance implements Cell {
-	@SuppressWarnings("unused")
-	private int row;
-	private int column;
-	private EstateCell estate;
+	private final Estate estate;
 	private Player player;
 
-	public Entrance(int row, int column, EstateCell estate) {
-		this.row    = row;
-		this.column = column;
+	public Entrance(Estate estate) {
 		this.estate = estate;
 	}
 
@@ -86,17 +55,7 @@ final class Entrance implements Cell {
 	}
 
 	public Cell copy() {
-		return new Entrance(row, column, estate);
-	}
-
-	@Override
-	public int getRow() {
-		return row;
-	}
-
-	@Override
-	public int getColumn() {
-		return column;
+		return new Entrance(estate);
 	}
 
 	public Boolean contains(Player p) {
@@ -134,25 +93,9 @@ final class Entrance implements Cell {
 final class Wall implements Cell {
 
 	@Override
-	public Cell copy() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public Cell copy() { return this; }
 
 	@Override
-	public int getRow() {
-		return 0;
-	}
-
-	@Override
-	public int getColumn() {
-		return 0;
-	}
-
-	public Boolean contains(Player p) {
-		return false;
-	}
-
 	public Boolean isPassable() {
 		return false;
 	}

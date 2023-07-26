@@ -1,8 +1,7 @@
 package cluedo25_7;
 
-
-
 import java.util.*;
+
 /**
  * The Game class initializes the game and tells players when it is their turn,
  * as well as storing the board, the scanner used for reading player input,
@@ -12,9 +11,9 @@ public class Game {
 
     private final Board board;
     private final Scanner scanner;
-    private final List<Player> players;
-    @SuppressWarnings("unused")
-	private final Solution globalSolution;
+    private final ArrayList<Player> players;
+    private ArrayList<Card> allCards;
+    private HashSet<Card> solution;
 
     /**
      * Constructs a new Game instance with an initialized board, 3-4 players,
@@ -25,10 +24,14 @@ public class Game {
         this.board = new Board(24, 24);
         this.scanner = new Scanner(System.in);
         this.players = new ArrayList<>(); addPlayers();
-        this.globalSolution = getGlobalSolution();
+        initializeCards();
     }
-    
-	public Scanner getScanner() {
+
+    public Board getBoard() {
+        return board;
+    }
+
+    public Scanner getScanner() {
 		return scanner;
 	}
 
@@ -49,19 +52,24 @@ public class Game {
         if (numPlayers == 4) {players.add(new Player("Percy", this,14, 22));}
 
         for (int i = 0; i < numPlayers; i++) {
-            Player currentPlayer = getPlayer(i);
-            //WARNING: this will cause an error if the player's initial position is not on a Path cell.
-            Path currentPath = (Path)board.getCellAt(currentPlayer.row(), currentPlayer.column());
-            currentPath.setPlayer(currentPlayer); //Set the player on the board cell.
+            getPlayer(i).getPlayerLocation().setPlayer(getPlayer(i)); //Set the player on the board cell.
         }
     }
     
-    public List<Player> getPlayers() {
-    	return List.copyOf(players);
+    public ArrayList<Player> getPlayers() {
+    	return ArrayList.copyOf(players);
     }
     
     public Player getPlayer(int i) {
     	return players.get(i);
+    }
+    public Card getCard(String suspectName) {
+        for (Card c : allCards) {
+            if (c.name().equals(suspectName)) {
+                return c;
+            }
+        }
+        throw new IllegalArgumentException(String.format("%s isn't a valid Card name", suspectName));
     }
 
     /**
@@ -87,7 +95,7 @@ public class Game {
     public void clock(int startingIndex) {
         Boolean gameOver = players.get(startingIndex).turn(roll(1));
         for (int i = 1; !gameOver; i++) {
-            int index = startingIndex + i % players.size(); // Loop back to the beginning when reaching the end
+            int index = (startingIndex + i) % players.size(); // Loop back to the beginning when reaching the end
             gameOver = players.get(index).turn(roll(i+1));
 
         }
@@ -97,66 +105,118 @@ public class Game {
      * Returns the next card of the specified type from the given list of cards.
      * The method removes the card from the list before returning it.
      *
-     * @param cards     The list of cards to search for the specified type.
-     * @param cardType  The class type of the card to retrieve.
-     * @param <T>       The type of card to retrieve, extending the Card class.
+     * @param cardType  The type of the card to retrieve.
      * @return The next card of the specified type, or null if no such card is
      * found.
      */
-    private <T extends Card> T getNextCardOfType(List<Card> cards, Class<T> cardType) {
-        for (Card card : cards) {
-            if (cardType.isInstance(card)) {
-                cards.remove(card);
-                return cardType.cast(card);
+    private Card getNextCardOfType(Card.Type cardType) {
+        Iterator<Card> iterator = allCards.iterator();
+        while (iterator.hasNext()) {
+            Card card = iterator.next();
+            if (card.cardType() == cardType) {
+                iterator.remove(); // Remove the card from the list
+                return card;
             }
         }
-        return null;
+        throw new IllegalStateException("No card of specified type found");
     }
 
     /**
-     * Returns the global solution for the game, which contains the actual suspect,
-     * weapon, and estate.
-     *
-     * @return The global solution for the game.
+     * Initializes the global solution for the game, which contains the suspect,
+     * weapon, and estate and the players' hands.
      */
-    public Solution getGlobalSolution() {
-        List<Card> allCards = new ArrayList<>();
-        allCards.add(new Suspect("Lucilla", null));
-        allCards.add(new Suspect("Bert", null));
-        allCards.add(new Suspect("Malina", null));
-        allCards.add(new Suspect("Percy", null));
-        allCards.add(new Weapon("Revolver", null));
-        allCards.add(new Weapon("Candlestick", null));
-        allCards.add(new Weapon("Knife", null));
-        allCards.add(new Weapon("Rope", null));
-        allCards.add(new Estate("Haunted House", null));
-        allCards.add(new Estate("Manic Manor", null));
-        allCards.add(new Estate("Calamity Castle", null));
-        allCards.add(new Estate("Peril Palace", null));
-        allCards.add(new Estate("Visitation Villa", null));
+    public void initializeCards() {
+        this.allCards = new ArrayList<>();
+        allCards.add(new Card("Lucilla",          Card.Type.SUSPECT));
+        allCards.add(new Card("Bert",             Card.Type.SUSPECT));
+        allCards.add(new Card("Malina",           Card.Type.SUSPECT));
+        allCards.add(new Card("Percy",            Card.Type.SUSPECT));
+        allCards.add(new Card("Revolver"   ,      Card.Type.WEAPON));
+        allCards.add(new Card("Candlestick",      Card.Type.WEAPON));
+        allCards.add(new Card("Knife",            Card.Type.WEAPON));
+        allCards.add(new Card("Rope",             Card.Type.WEAPON));
+        allCards.add(new Card("Haunted House",    Card.Type.ESTATE));
+        allCards.add(new Card("Manic Manor",      Card.Type.ESTATE));
+        allCards.add(new Card("Calamity Castle",  Card.Type.ESTATE));
+        allCards.add(new Card("Peril Palace",     Card.Type.ESTATE));
+        allCards.add(new Card("Visitation Villa", Card.Type.ESTATE));
         Collections.shuffle(allCards);
 
-        // Distribute the cards among the players
-        for (int i = 0; i < players.size(); i++) {
-            getPlayer(i).addToHand(getNextCardOfType(allCards, Weapon.class));
-            getPlayer(i).addToHand(getNextCardOfType(allCards, Estate.class));
-            if (i < 4) {
-                getPlayer(i).addToHand(getNextCardOfType(allCards, Suspect.class));
-            }
+        this.solution = new HashSet<>();
+        solution.add(getNextCardOfType(Card.Type.SUSPECT));
+        solution.add(getNextCardOfType(Card.Type.WEAPON));
+        solution.add(getNextCardOfType(Card.Type.ESTATE));
+
+        for (int i = 0; i < 3; i++) {
+            players.get(i).getHand().addAll(allCards.subList(3*i, 3*(i+1)));
         }
         if (players.size() == 3) {
-            players.get(0).addToHand(getNextCardOfType(allCards, Weapon.class));
-            players.get(1).addToHand(getNextCardOfType(allCards, Weapon.class));
+            players.get(0).getHand().add(allCards.get(9));
+            players.get(1).getHand().add(allCards.get(10));
+        } else {//There are 4 players
+            players.get(3).getHand().addAll(allCards.subList(9, 11));
         }
-        return new Solution(getNextCardOfType(allCards, Suspect.class),
-        		getNextCardOfType(allCards, Weapon.class),
-        		getNextCardOfType(allCards, Estate.class));
+
+        allCards.addAll(solution);
+    }
+
+    public Boolean makeGuess() {
+        System.out.println("Enter your guess:");
+
+        HashSet<Card> guess = getGuess();
+
+        // Check if the guess matches the actual solution
+        Boolean correctGuess = checkSolution(guess);
+
+        if (correctGuess) {
+            System.out.println("Congratulations! Your guess is correct.");
+        } else {
+            System.out.println("Your guess is incorrect.");
+        }
+
+        return true;
+    }
+
+    public Boolean solutionAttempt() {
+        System.out.println("Enter your solution:");
+
+        HashSet<Card> guess = getGuess();
+
+        // Check if the solution attempt matches the actual solution
+        return checkSolution(guess);
+    }
+
+    private HashSet<Card> getGuess() {
+        System.out.print("Suspect: ");
+        String suspectName = scanner.nextLine();
+        System.out.print("Weapon: ");
+        String weaponName = scanner.nextLine();
+        System.out.print("Estate: ");
+        String estateName = scanner.nextLine();
+
+        // Create suspect, weapon, and estate cards based on the player's input
+        HashSet<Card> guess = new HashSet<>();
+        guess.add(getCard(suspectName));
+        guess.add(getCard(weaponName));
+        guess.add(getCard(estateName));
+        return guess;
+    }
+
+    /**
+     * Compares the players guess to the solution
+     * @param guess the players guess
+     * @return gameOver; whether the solution is the same as the players guess.
+     */
+    public Boolean checkSolution(HashSet<Card> guess) {
+        // Get the actual solution from the game's globalSolution
+        return guess.containsAll(this.solution) && this.solution.containsAll(guess);
     }
 
     /**
      * Closes all open resources, such as the Scanner, at the end of the game.
      */
     public void terminate() {
+        System.out.println("Congratulations! You successfully solved the mystery.");
         scanner.close();
     }
 
@@ -174,59 +234,5 @@ public class Game {
         game.clock(startingIndex);
 
         game.terminate();
-    }
-
-    public Board getBoard() {
-        return board;
-    }
-
-    /**
-     * The Solution class represents a set of cards that together form a solution to the game.
-     * It includes a suspect, weapon, and estate cards.
-     */
-    public static class Solution {
-        private final Suspect suspect;
-        private final Weapon weapon;
-        private final Estate estate;
-
-        /**
-         * Constructs a new Solution instance with the specified suspect, weapon, and estate.
-         *
-         * @param suspect The suspect card.
-         * @param weapon  The weapon card.
-         * @param estate  The estate card.
-         */
-        public Solution(Suspect suspect, Weapon weapon, Estate estate) {
-            this.suspect = suspect;
-            this.weapon = weapon;
-            this.estate = estate;
-        }
-
-        /**
-         * Gets the suspect card from the solution.
-         *
-         * @return The suspect card.
-         */
-        public Suspect getSuspect() {
-            return suspect;
-        }
-
-        /**
-         * Gets the weapon card from the solution.
-         *
-         * @return The weapon card.
-         */
-        public Weapon getWeapon() {
-            return weapon;
-        }
-
-        /**
-         * Gets the estate card from the solution.
-         *
-         * @return The estate card.
-         */
-        public Estate getEstate() {
-            return estate;
-        }
     }
 }

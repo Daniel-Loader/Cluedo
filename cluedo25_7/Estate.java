@@ -1,30 +1,26 @@
 package cluedo25_7;
 
-
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * The EstateCell class represents a generic estate for our Cluedo game.
+ * The Estate Cell class represents a generic estate for our Cluedo game.
  * Each EstateCell instance has an array of lines representing the visual appearance of the estate,
  * a list of occupants (players) currently present in the estate, and entrance strings for each direction.
  * The estate can be a HauntedHouse or any other custom estate that implements the Habitable interface.
  */
-public class EstateCell implements Cell {
+public class Estate implements Cell {
 	@SuppressWarnings("unused")
     private final Map<Direction, String> entranceStrings = Board.ENTRANCESTRINGS;
 	public	final String wallString = Board.WALLSTRING;
     private final int row;
-    private final int column;
-    private List<Player> occupants = new ArrayList<Player>();
-    private List<Entrance> entrances;
+    private ArrayList<Player> occupants = new ArrayList<Player>();
+    private ArrayList<Entrance> entrances;
     private String[] lines = new String[5];
     
-    EstateCell(int row, int col) {
+    Estate(int row) {
     	this.row = row;
-    	this.column = col;
     }
     
     /**
@@ -34,24 +30,17 @@ public class EstateCell implements Cell {
      */
     @Override
 	public Cell copy() {
-    	EstateCell copy = new EstateCell(row, column);
-    	copy.setEntrances(List.copyOf(entrances));
-    	copy.setLines(lines);
-    	return copy;
+    	throw new IllegalStateException("Estates shouldn't be duplicated");
 	}
 
-	@Override
-	public int getRow() {
-		return row;
-	}
-
-	@Override
-	public int getColumn() {
-		return column;
-	}
+    /**
+     * Getter method for the estates starting row;
+     * @return row - the uppermost row of the estate
+     */
+    private int getRow() { return row; }
 	
 	@SuppressWarnings("unused")
-	private void setOccupants(List<Player> ps) {
+	private void setOccupants(ArrayList<Player> ps) {
 		this.occupants = ps;
 	}
 	
@@ -60,7 +49,7 @@ public class EstateCell implements Cell {
     *
     * @return The list of players occupying the estate.
     */
-   public List<Player> getOccupants() {
+   public ArrayList<Player> getOccupants() {
        return occupants;
    }
 
@@ -119,19 +108,8 @@ public class EstateCell implements Cell {
 	public String getLineString(int i) {
 		return lines[i-getRow()];
 	}
-
-    /**
-     * Checks if the given player is currently occupying this EstateCell.
-     *
-     * @param p The player to check for occupancy.
-     * @return true if the player is occupying this EstateCell, false otherwise.
-     */
-    @Override
-    public Boolean contains(Player p) {
-        return occupants.contains(p);
-    }
     
-    private void setEntrances(List<Entrance> es) {
+    private void setEntrances(ArrayList<Entrance> es) {
 		this.entrances = es;
 		
 	}
@@ -177,18 +155,16 @@ public class EstateCell implements Cell {
 /**
  * One of EstateCell's 5 variants.
  */
-class HauntedHouse extends EstateCell implements Habitable {
+class HauntedHouse extends Estate implements Habitable {
     private final String adjective;
     private final String habitat;
 
     /**
      * Constructs a HauntedHouse estate with the given enclosing EstateCell.
      * @param b   The board Haunted House belongs to
-     * @param row The row Haunted House is located on
-     * @param col The column Haunted House is located on
      */
-    public HauntedHouse(Board b, int row, int col) {
-    	super(row, col);
+    public HauntedHouse(Board b, int row) {
+        super(row);
         this.adjective = "Haunted";
         this.habitat = "House";
         super.setLines(initializeLines());

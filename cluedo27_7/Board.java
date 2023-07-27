@@ -1,6 +1,5 @@
 package cluedo27_7;
 
-import cluedo25_7.Estate;
 import cluedo27_7.EstateCell.Direction;
 
 import java.util.Map;
@@ -145,7 +144,6 @@ public class Board {
      * The representation includes the type of each cell and additional information for specific cells.
      */
     public void print() {
-        // TODO Implement a string representation of board
         System.out.println("Printing Board...");
         StringBuilder boardPrint = new StringBuilder();
         for (int row = 0; row < 24; row++) {
@@ -162,18 +160,10 @@ public class Board {
                     col = 7;
                 }
                 // Manic Manor:
-                else if (row == 3 && col == 18) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append("  Manic  ");
-                    col = 21;
-                } else if (row == 4 && col == 18) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append(" Manor   ");
-                    col = 21;
-                } else if (row == 5 && col == 18) {
-                    // 15 total
-                    boardPrint.append("         ");
-                    col = 21;
+                else if (row > 1 && row < 7 && col == 17) {
+                    // 15 total - 7 word = 8 remaining. So 4 left and 4 right
+                    boardPrint.append(estates[1].getLine(row));
+                    col = 22;
                 }
                 // Calamity Castle:
                 else if (row == 18 && col == 3) {

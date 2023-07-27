@@ -6,11 +6,11 @@ package cluedo27_7;
  */
 public interface Habitable {
     /**
-     * Retrieves the visual appearance of the estate as an array of lines.
-     *
-     * @return The array of strings representing the estate's visual appearance.
+     * Retrieves the string representation of a row from the estate.
+     * @param i the row on the board to return
+     * @return The String representation of the estate on the given row.
      */
-    String[] getLines();
+    String getLine(int i);
 
     boolean Move(Player player, String w);
 }

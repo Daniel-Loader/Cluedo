@@ -12,19 +12,14 @@ import java.util.stream.Collectors;
  * The estate can be a HauntedHouse or any other custom estate that implements the Habitable interface.
  */
 public class EstateCell implements Cell {
-    public String getLine(int i) {
-        return lines[i-row];
-    }
 
-    static enum Direction { UP, DOWN, LEFT, RIGHT }
-	@SuppressWarnings("unused")
+    enum Direction { UP, DOWN, LEFT, RIGHT }
     private final Map<Direction, String> entranceStrings = Board.ENTRANCESTRINGS;
 	public	final String wallString = Board.WALLSTRING;
     private final int row;
     private final int column;
     private List<Player> occupants = new ArrayList<Player>();
     private List<Entrance> entrances = new ArrayList<Entrance>();
-    private String[] lines = new String[5];
     final String adjective;
     final String habitat;
 
@@ -62,7 +57,6 @@ public class EstateCell implements Cell {
 	public Cell copy() {
     	EstateCell copy = new EstateCell(row, column, adjective, habitat);
     	copy.setEntrances(entrances);
-    	copy.setLines(lines);
     	return copy;
 	}
 
@@ -129,22 +123,15 @@ public class EstateCell implements Cell {
 	   
 	public boolean Move(Player p, String d) {throw new Error("Generic Estates shouldn't have people in them");}
 	
-	public void setLines(String[] ls) {
-		this.lines = ls;
-	}
-	
 	/**
      * Retrieves the lines representing the visual appearance of the estate.
      *
      * @return The array of strings representing the estate's visual appearance.
      */
-    public String[] getLines() { return lines; }
-    
 
-
-	public String getLineString(int i) {
-		return lines[i-getRow()];
-	}
+    public String getLine(int i) {
+        throw new IllegalStateException("Printing the lines from a genric estate.");
+    }
 
     /**
      * Checks if the given player is currently occupying this EstateCell.
@@ -213,29 +200,32 @@ class HauntedHouse extends EstateCell implements Habitable {
      */
     public HauntedHouse(Board b, int row, int col) {
         super(row, col, " Haunted ", "  House  ");
-        super.setLines(initializeLines());
     }
 
     /**
-     * Retrieves the visual appearance of the HauntedHouse estate as an array of lines.
-     * The lines are generated using the attributes of the enclosing EstateCell.
+     * Retrieves a specific line of the room representation based on the provided row index.
      *
-     * @return The array of strings representing the visual appearance of the HauntedHouse estate.
+     * @param i The row index of the line to retrieve.
+     * @return The line representation as a String.
+     * @throws IndexOutOfBoundsException If the given row index is out of bounds.
      */
-    public String[] initializeLines() {
+    public String getLine(int i) {
         String wallString = super.wallString;
         String right = super.getEntranceString(Direction.RIGHT);
-        String down  = super.getEntranceString(Direction.DOWN);
+        String down = super.getEntranceString(Direction.DOWN);
 
-        // Generate the lines using the attributes of the enclosing Estate
-        String[] hauntedHouseLines = {
-                wallString.repeat(5),
-                wallString + adjective + right,
-                wallString + habitat + wallString,
-                wallString + super.getPlayerStrings() + wallString,
-                wallString.repeat(3) + down + wallString
+        // Calculate the difference between the provided row index (i) and the current row
+        int rowIndexDifference = i - getRow();
+
+        // Handle different row index cases using the advanced switch expression
+        return switch (rowIndexDifference) {
+            case 0 -> wallString.repeat(5);
+            case 1 -> wallString + adjective + right;
+            case 2 -> wallString + habitat + wallString;
+            case 3 -> wallString + super.getPlayerStrings() + wallString;
+            case 4 -> wallString.repeat(3) + down + wallString;
+            default -> throw new IndexOutOfBoundsException("Invalid row index: " + i);
         };
-        return hauntedHouseLines;
     }
     
     public String toString() {
@@ -271,29 +261,32 @@ class ManicManor extends EstateCell implements Habitable {
      */
     public ManicManor(Board b, int row, int col) {
         super(row, col, "  Manic  ","  Manor  ");
-        super.setLines(initializeLines());
     }
 
     /**
-     * Retrieves the visual appearance of the HauntedHouse estate as an array of lines.
-     * The lines are generated using the attributes of the enclosing EstateCell.
+     * Retrieves a specific line of the room representation based on the provided row index.
      *
-     * @return The array of strings representing the visual appearance of the HauntedHouse estate.
+     * @param i The row index of the line to retrieve.
+     * @return The line representation as a String.
+     * @throws IndexOutOfBoundsException If the given row index is out of bounds.
      */
-    public String[] initializeLines() {
+    public String getLine(int i) {
         String wallString = super.wallString;
         String left = super.getEntranceString(Direction.LEFT);
         String down = super.getEntranceString(Direction.DOWN);
 
-        // Generate the lines using the attributes of the enclosing Estate
-        String[] hauntedHouseLines = {
-                wallString.repeat(5),
-                wallString + adjective + wallString,
-                wallString + habitat + wallString,
-                left + super.getPlayerStrings() + wallString,
-                wallString.repeat(3) + down + wallString
+        // Calculate the difference between the provided row index (i) and the current row
+        int rowIndexDifference = i - getRow();
+
+        // Handle different row index cases using the advanced switch expression
+        return switch (rowIndexDifference) {
+            case 0 -> wallString.repeat(5);
+            case 1 -> wallString + adjective + wallString;
+            case 2 -> wallString + habitat + wallString;
+            case 3 -> left + super.getPlayerStrings() + wallString;
+            case 4 -> wallString.repeat(3) + down + wallString;
+            default -> throw new IndexOutOfBoundsException("Invalid row index: " + i);
         };
-        return hauntedHouseLines;
     }
 
     public String toString() {
@@ -303,14 +296,14 @@ class ManicManor extends EstateCell implements Habitable {
     @Override
     public boolean Move(Player player, String direction) {
         if (direction.equals("a")) {
-            player.setPlayerLocation(player.getGame().getBoard().getCellAt(5,17));
-            player.setRow(5);
-            player.setColumn(17);
+            player.setPlayerLocation(player.getGame().getBoard().getCellAt(3,7));
+            player.setRow(3);
+            player.setColumn(7);
             return true;
         } else if (direction.equals("s")) {
-            player.setPlayerLocation(player.getGame().getBoard().getCellAt(6,20));
-            player.setRow(6);
-            player.setColumn(20);
+            player.setPlayerLocation(player.getGame().getBoard().getCellAt(7,5));
+            player.setRow(7);
+            player.setColumn(5);
             return true;
         } else {
             return false;
@@ -331,7 +324,6 @@ class CalamityCastle extends EstateCell implements Habitable {
      */
     public CalamityCastle(Board b, int row, int col) {
         super(row, col, " Calamity", "  Castle ");
-        super.setLines(initializeLines());
     }
 
     /**
@@ -340,20 +332,23 @@ class CalamityCastle extends EstateCell implements Habitable {
      *
      * @return The array of strings representing the visual appearance of the HauntedHouse estate.
      */
-    public String[] initializeLines() {
+    public String getLine(int i) {
         String wallString = super.wallString;
         String right = super.getEntranceString(Direction.RIGHT);
-        String up  = super.getEntranceString(Direction.DOWN);
+        String up  = super.getEntranceString(Direction.UP);
 
-        // Generate the lines using the attributes of the enclosing Estate
-        String[] hauntedHouseLines = {
-                wallString + up + wallString.repeat(3),
-                wallString + adjective + right,
-                wallString + habitat + wallString,
-                wallString + super.getPlayerStrings() + wallString,
-                wallString.repeat(5)
+        // Calculate the difference between the provided row index (i) and the current row
+        int rowIndexDifference = i - getRow();
+
+        // Handle different row index cases using the advanced switch expression
+        return switch (rowIndexDifference) {
+            case 0 -> wallString + up + wallString.repeat(3);
+            case 1 -> wallString + adjective + right;
+            case 2 -> wallString + habitat + wallString;
+            case 3 -> wallString + super.getPlayerStrings() + wallString;
+            case 4 -> wallString.repeat(5);
+            default -> throw new IndexOutOfBoundsException("Invalid row index: " + i);
         };
-        return hauntedHouseLines;
     }
 
     public String toString() {

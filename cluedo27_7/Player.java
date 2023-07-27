@@ -71,15 +71,13 @@ public class Player{
     public Boolean turn(int roll) {
         //this is a mess. I will clean it up next time I get a chance.
         Boolean gameOver = false;
-        game.getBoard().print();
-        print();
         if (game.getBoard().getCellAt(row, column) instanceof EstateCell) {
             gameOver = offerGuess();
         }
 
         for (int i = 0; i < roll && gameOver.equals(false); i++) {
             game.getBoard().print();
-            print();
+            print(roll-i);
             move();
             if (game.getBoard().getCellAt(row, column) instanceof EstateCell) {
                 gameOver = offerGuess();
@@ -108,6 +106,7 @@ public class Player{
                     System.out.println("You pressed 'w'. Moving up.");
                 } else {
                     System.out.println("Up is blocked. Try another direction.");
+                    move();
                 }
             }
             case 'a' -> {
@@ -115,6 +114,7 @@ public class Player{
                     System.out.println("You pressed 'a'. Moving left.");
                 } else {
                     System.out.println("Left is blocked. Try another direction.");
+                    move();
                 }
             }
             case 's' -> {
@@ -122,6 +122,7 @@ public class Player{
                     System.out.println("You pressed 's'. Moving down.");
                 } else {
                     System.out.println("Down is blocked. Try another direction.");
+                    move();
                 }
             }
             case 'd' -> {
@@ -132,7 +133,7 @@ public class Player{
                 }
             }
             default -> {
-                System.out.println("Invalid input. Try again.");
+                System.out.printf("%s is an invalid direction. Try again.", input);
                 move();
             }
         }
@@ -340,8 +341,8 @@ public class Player{
     /**
      * Prints the players' name and their hand to the console
      */
-    public void print() {
-        System.out.println("Player: " + this.getName());
+    public void print(int movesLeft) {
+        System.out.printf("%s's Turn: %d moves left\n", this.getName(), movesLeft);
         System.out.println("Hand:");
         for (Card card : getHand()) {
             System.out.println(card);

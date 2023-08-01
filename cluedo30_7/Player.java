@@ -1,18 +1,16 @@
-package cluedo27_7;
+package cluedo30_7;
 
 import java.util.ArrayList;
 import java.util.List;
 
-// Player.java
+
 public class Player{
     private final String name;
     private final Game game;
-    private final List<Card> hand;
-    private final List<Card> seen;
+    private final List<String> hand;
+    private final List<String> seen;
     private int row;
     private int column;
-
-    public Cell getPlayerLocation() {return game.getBoard().getCellAt(row, column);}
 
     /**
      * Constructs a new Player object.
@@ -51,7 +49,7 @@ public class Player{
      * Add a card to the player's hand.
      * @param card The card to add.
      */
-    public void addToHand(Card card) {
+    public void addToHand(String card) {
         hand.add(card);
     }
 
@@ -59,9 +57,17 @@ public class Player{
      * Get the player's hand.
      * @return the player's list of Cards.
      */
-    public List<Card> getHand() {
+    public List<String> getHand() {
         return List.copyOf(hand);
     }
+
+    public void setPlayerLocation(Cell fromCell, Cell toCell) {
+        //game.getBoard().getCellAt(row, column).removePlayer(this);
+        fromCell.removePlayer(this);
+        toCell.setPlayer(this);
+    }
+
+    public Cell getPlayerLocation() {return game.getBoard().getCellAt(row, column);}
 
     /**
      * method to process a players turn.
@@ -70,25 +76,51 @@ public class Player{
      */
     public Boolean turn(int roll) {
         //this is a mess. I will clean it up next time I get a chance.
-        Boolean gameOver = false;
-        if (game.getBoard().getCellAt(row, column) instanceof EstateCell) {
-            gameOver = offerGuess();
+        char exitStatus = 'c';
+        if (getPlayerLocation() instanceof Estate) {
+            exitStatus = offerGuess();
         }
 
-        for (int i = 0; i < roll && gameOver.equals(false); i++) {
+        for (int i = 0; i < roll && exitStatus != 't' && exitStatus != 'g'; i++) {
             game.getBoard().print();
             print(roll-i);
             move();
-            if (game.getBoard().getCellAt(row, column) instanceof EstateCell) {
-                gameOver = offerGuess();
+            if (getPlayerLocation() instanceof Estate) {
+                exitStatus = offerGuess();
             }
         }
-        return gameOver;
+        return (exitStatus == 'g');
     }
 
-    public void setPlayerLocation(Cell cell) {
-        game.getBoard().getCellAt(row, column).removePlayer(this);
-        cell.setPlayer(this);
+    private char offerGuess() {
+        System.out.println("Enter 'g' to make a guess or 's' to offer a solution: ");
+        System.out.println("Anything else will be treated as a pass");
+        char input = game.getScanner().next().charAt(0);
+
+        return switch (input) {
+            case 'g' -> makeGuess();
+            case 's' -> solutionAttempt();
+            default -> 'c';
+        };
+
+    }
+
+    private char makeGuess() {
+        System.out.println("Enter your guess:");
+
+        ArrayList<String> guess = getGuess();
+
+        // Check if the guess matches the actual solution
+        String alibi = game.refute(guess);
+
+        if (alibi == null) {
+            System.out.println("No one could refute your guess");
+        } else {
+            this.seen.add(alibi);
+            System.out.printf("%s was not part of the crime\n", alibi);
+        }
+
+        return 't';
     }
 
     /**
@@ -97,10 +129,9 @@ public class Player{
      */
     public void move() {
         System.out.println("Enter a command (w, a, s, d) to Move: ");
-        char input = Character.toLowerCase(game.getScanner().next().charAt(0));
-        
-        Cell targetCell = null;
-        switch (input) {
+        char direction = Character.toLowerCase(game.getScanner().next().charAt(0));
+
+        switch (direction) {
             case 'w' -> {
                 if (moveUp()) {
                     System.out.println("You pressed 'w'. Moving up.");
@@ -130,29 +161,14 @@ public class Player{
                     System.out.println("You pressed 'd'. Moving right.");
                 } else {
                     System.out.println("Right is blocked. Try another direction.");
+                    move();
                 }
             }
             default -> {
-                System.out.printf("%s is an invalid direction. Try again.", input);
+                System.out.println("Invalid direction. Try again.");
                 move();
             }
         }
-    }
-    // Other member variables and constructor ...
-
-    /**
-     * Checks if a cell is occupied by another player.
-     *
-     * @param cell The cell to check for occupancy.
-     * @return true if the cell is occupied, false otherwise.
-     */
-    private boolean isCellOccupied(Cell cell) {
-        for (Player otherPlayer : game.getPlayers()) {
-            if (otherPlayer != this && otherPlayer.getPlayerLocation() == cell) {
-                return true;
-            }
-        }
-        return false;
     }
 
 
@@ -166,14 +182,14 @@ public class Player{
         if (row > 0) {
             Cell playerLocation = game.getBoard().getCellAt(row, column);
             Cell newCell = game.getBoard().getCellAt(row - 1, column);
-            if (playerLocation instanceof EstateCell) {
-                return ((Habitable) playerLocation).Move(this, "w");
+            if (playerLocation instanceof Estate) {
+                return ((Estate) playerLocation).Move(this, "w");
             } else if (newCell instanceof Path && newCell.isPassable()) {
-                setPlayerLocation(newCell);
+                setPlayerLocation(playerLocation, newCell);
                 row--;
                 return true;
             } else if (newCell instanceof Entrance) {
-                setPlayerLocation(((Entrance) newCell).getEstate());
+                setPlayerLocation(playerLocation, ((Entrance) newCell).getEstate());
                 row -= 2;
                 return true;
             } else {
@@ -194,14 +210,19 @@ public class Player{
         if (row < 23) {
             Cell playerLocation = game.getBoard().getCellAt(row, column);
             Cell newCell = game.getBoard().getCellAt(row + 1, column);
-            if (playerLocation instanceof EstateCell) {
-                return ((Habitable) playerLocation).Move(this, "s");
+            if (playerLocation instanceof Estate) {
+                return ((Estate) playerLocation).Move(this, "s");
             } else if (newCell instanceof Path && newCell.isPassable()) {
-                setPlayerLocation(newCell);
+                setPlayerLocation(playerLocation, newCell);
                 row++;
                 return true;
             } else if (newCell instanceof Entrance) {
-                setPlayerLocation(((Entrance) newCell).getEstate());
+                System.out.println("DEBUG ONLY: newCell = " + newCell);
+                System.out.println("DEBUG ONLY: (Entrance)newCell = " + newCell);
+                System.out.println("DEBUG ONLY: estate = " + ((Entrance)newCell).getEstate());
+                //Error could be in getCellAt()???
+                setPlayerLocation(playerLocation, ((Entrance) newCell).getEstate());
+                row += 2;
                 return true;
             }
         }
@@ -218,13 +239,15 @@ public class Player{
         if (column < 23) {
             Cell playerLocation = game.getBoard().getCellAt(row, column);
             Cell newCell = game.getBoard().getCellAt(row, column + 1);
-            if (playerLocation instanceof EstateCell) {
-                return ((Habitable) playerLocation).Move(this, "d");
+            if (playerLocation instanceof Estate) {
+                return ((Estate) playerLocation).Move(this, "d");
             } else if (newCell instanceof Path && newCell.isPassable()) {
-                setPlayerLocation(newCell);
+                setPlayerLocation(playerLocation, newCell);
                 column++;
                 return true;
             } else if (newCell instanceof Entrance) {
+                setPlayerLocation(playerLocation, ((Entrance) newCell).getEstate());
+                column += 2;
                 return true;
             } else {
                 return false;
@@ -240,91 +263,50 @@ public class Player{
      * @return true if the player moves to a valid square, false if not.
      */
 	private boolean moveLeft() {
-        if(row > 0) {
+        if(column > 0) {
             Cell playerLocation = game.getBoard().getCellAt(row, column);
             Cell newCell = game.getBoard().getCellAt(row, column - 1);
-            if (playerLocation instanceof EstateCell) {
-                return ((Habitable) playerLocation).Move(this, "a");
+            if (playerLocation instanceof Estate) {
+                return ((Estate) playerLocation).Move(this, "a");
             } else if (playerLocation instanceof Path & newCell.isPassable()) {
-                setPlayerLocation(newCell);
+                setPlayerLocation(playerLocation, newCell);
                 column--;
                 return true;
             } else if (playerLocation instanceof Entrance) {
-                setPlayerLocation(((Entrance) playerLocation).getEstate());
+                setPlayerLocation(playerLocation, ((Entrance) playerLocation).getEstate());
+                column -= 2;
                 return true;
             }
         }
         return false;
     }
 
-    private Boolean offerGuess() {
-        System.out.println("Enter 'g' to make a guess or 's' to offer a solution: ");
-        System.out.println("Anything else will be treated as a pass");
-        char input = game.getScanner().next().charAt(0);
-
-        return switch (input) {
-            case 'g' -> makeGuess();
-            case 's' -> solutionAttempt();
-            default -> false;
-        };
-
-	}
-
-    private Boolean makeGuess() {
-        System.out.println("Enter your guess:");
-
-        List<Card> guess = getGuess();
-
-        // Check if the guess matches the actual solution
-        Boolean correctGuess = checkSolution(guess);
-
-        if (correctGuess) {
-            System.out.println("Congratulations! Your guess is correct.");
-        } else {
-            System.out.println("Your guess is incorrect.");
-        }
-
-        return true;
-    }
-
-    private Boolean solutionAttempt() {
+    private char solutionAttempt() {
         System.out.println("Enter your solution:");
 
-        List<Card> guess = getGuess();
+        ArrayList<String> guess = getGuess();
 
         // Check if the solution attempt matches the actual solution
-        Boolean correctSolution = checkSolution(guess);
+        Boolean correctSolution = game.checkSolution(guess);
 
         if (correctSolution) {
-            System.out.println("Congratulations! You successfully solved the mystery.");
+            System.out.println("Congratulations " + this.name + "! You successfully solved the mystery.");
+            return 'g';
             // Implement the logic to reveal the solution and end the game here
         } else {
             System.out.println("Your solution attempt is incorrect.");
+            return 't';
         }
-
-        return true;
     }
 
-    private List<Card> getGuess() {
-        System.out.print("Suspect: ");
-        String suspectName = game.getScanner().next();
-        System.out.print("Weapon: ");
-        String weaponName = game.getScanner().next();
-        System.out.print("Estate: ");
-        String estateName = game.getScanner().next();
+    private ArrayList<String> getGuess() {
 
-        // Create suspect, weapon, and estate cards based on the player's input
-        List<Card> guess = new ArrayList<>();
-        guess.add(game.getCard(suspectName));
-        guess.add(game.getCard(weaponName));
-        guess.add(game.getCard(estateName));
+        // add suspect, weapon, and estate cards based on the player's input
+        ArrayList<String> guess = new ArrayList<>();
+        guess.add(game.getSuspectCard());
+        guess.add(game.getWeaponCard());
+        guess.add(game.getEstateCard());
         return guess;
-    }
-
-    // Implement the logic to check if the guess matches the actual solution
-    public Boolean checkSolution(List<Card> guess) {
-        // Get the actual solution from the game's globalSolution
-        return guess.containsAll(game.getGlobalSolution()) && game.getGlobalSolution().containsAll(guess);
     }
 
     /**
@@ -333,7 +315,7 @@ public class Player{
      */
     public void printHand() {
         for (int i = 0; i < hand.size(); i++) {
-            System.out.printf("%d : %s\n", i, hand.get(i).toString());
+            System.out.printf("%d : %s\n", i, hand.get(i));
         }
         System.out.println("----------");
     }
@@ -344,7 +326,11 @@ public class Player{
     public void print(int movesLeft) {
         System.out.printf("%s's Turn: %d moves left\n", this.getName(), movesLeft);
         System.out.println("Hand:");
-        for (Card card : getHand()) {
+        for (String card : getHand()) {
+            System.out.println(card);
+        }
+        System.out.println("Seen:");
+        for (String card : seen) {
             System.out.println(card);
         }
         System.out.println("----------");

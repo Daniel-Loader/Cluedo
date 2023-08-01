@@ -1,6 +1,4 @@
-package cluedo27_7;
-
-import cluedo27_7.EstateCell.Direction;
+package cluedo30_7;
 
 import java.util.Map;
 
@@ -8,10 +6,28 @@ public class Board {
     private final int numRows;
     private final int numCols;
     private final Cell[][] cells;
-    private final EstateCell[] estates = new EstateCell[5];
+
+    /**
+     * 0 = Haunted House
+     * 1 = Manic Manor
+     * 2 = Calamity Castle
+     * 3 = Peril Palace
+     * 4 = Visitation Villa
+     */
+    private final Estate[] estates = new Estate[5];
+    public Estate[] estates(){return estates;}
     public static final String WALLSTRING = "###";
+    /**
+     * An enumeration that specifies the direction (UP, DOWN, LEFT, RIGHT) used for entrances in the estate.
+     */
+    public enum Direction { UP, DOWN, LEFT, RIGHT }
+
+    /**
+     * A map of directions to the string representation of an entrance on that side of an estate
+     * (Name Inverse to direction of arrows unfortunately).
+     */
     public static final Map<Direction, String> ENTRANCESTRINGS = Map.of(
-            Direction.UP, "vvv", Direction.DOWN, "^^^",
+            Direction.UP, "vv|", Direction.DOWN, "^^|",
             Direction.LEFT, ">>>", Direction.RIGHT, "<<<");
 
     public Board(int rows, int cols) {
@@ -46,7 +62,7 @@ public class Board {
         // ******************************************************
         // Haunted House:
         // ******************************************************
-        estates[0] = new HauntedHouse(this, 2, 2);
+        estates[0] = new HauntedHouse(2, 2);
         fill(2,2,7,7, new Wall());
         fill(3,3,6,6, estates[0]);
         cells[3][6] = new Entrance(3,6, estates[0]);
@@ -56,50 +72,55 @@ public class Board {
         // ******************************************************
         // Manic Manor:
         // ******************************************************
-        estates[1] = new ManicManor(this, 3,18);
+        estates[1] = new ManicManor(2,17);
         fill(2,17, 7,22, new Wall());
-        fill(3, 18, 5, 21, estates[1]);
+        fill(3, 18, 6, 21, estates[1]);
         // Entrances:
         // column 17 (x), row 5 (y) [row][column] [y][x] Flip the order.
-        cells[5][17] = new Entrance(5, 17, estates[1]); // Need to change the null.
+        cells[5][17] = new Entrance(5, 17, estates[1]);
         estates[1].addEntrance((Entrance) cells[5][17]);
-        cells[6][20] = new Entrance(6, 20,estates[1]); // Need to change the null.
+        cells[6][20] = new Entrance(6, 20,estates[1]);
         estates[1].addEntrance((Entrance) cells[6][20]);
         // ******************************************************
         // Calamity Castle:
         // ******************************************************
-        estates[2] = new CalamityCastle(this,18, 3);
+        estates[2] = new CalamityCastle(17, 2);
         fill(17,2,22,7, new Wall());
         fill(18, 3, 21, 6,  estates[2]);
         // Entrances:
         // column 3 (x), row 17 (y) [row][column] [y][x] Flip the order.
-        cells[17][3] = new Entrance(17,13, null); // Need to change the null.
+        cells[17][3] = new Entrance(17,13, estates[2]);
+        estates[2].addEntrance((Entrance) cells[17][3]);
         // column 6 (x), row 18 (y) [row][column] [y][x] Flip the order.
-        cells[18][6] = new Entrance(18, 6, null); // Need to change the null.
+        cells[18][6] = new Entrance(18, 6, estates[2]);
+        estates[2].addEntrance((Entrance) cells[18][6]);
 
         // ******************************************************
         // Peril Palace:
         // ******************************************************
+        estates[3] = new PerilPalace( 17,17);
         fill(17,17,22,22, new Wall());
-        //TODO write Peril Palace:
-        // Entrances:
-        // column 18 (x), row 17 (y) [row][column] [y][x] Flip the order.
-        cells[17][18] = new Entrance(17,18, null); // Need to change the null.
+        fill(18, 18, 21,21, estates[3]);
+        cells[17][18] = new Entrance(17,18, estates[3]);
+        estates[3].addEntrance((Entrance) cells[17][18]);
         // column 17 (x), row 20 (y) [row][column] [y][x] Flip the order.
-        cells[20][17] = new Entrance(20,17, null); // Need to change the null.
+        cells[20][17] = new Entrance(20,17, estates[3]);
+        estates[3].addEntrance((Entrance) cells[20][17]);
 
         // ******************************************************
         // Visitation Villa:
         // ******************************************************
-        //TODO write Visitation Villa:
+        estates[4] = new VisitationVilla( 10,9);
         fill(10,9,14,15, new Wall());
+        fill(11, 10, 13, 14, estates[4]);
         // column 12 (x), row 10 (y) [row][column] [y][x] Flip the order.
-        cells[10][12] = new Entrance(10,12, null); // TODO change all the nulls
-        cells[12][9] = new Entrance(10,12, null); // Need to change the null.
-        // column 11 (x), row 13 (y) [row][column] [y][x] Flip the order.
-        cells[13][11] = new Entrance(10,12, null); // Need to change the null.
+        cells[10][12] = new Entrance(10,12, estates[4]);
         // column 14 (x), row 11 (y) [row][column] [y][x] Flip the order.
-        cells[11][14] = new Entrance(10,12,  null); // Need to change the null.
+        cells[11][14] = new Entrance(10,12,  estates[4]);
+        // column 9 (x), row 12 (Y) [row][column] [y][x] Flip the order.
+        cells[12][9] = new Entrance(10,12, estates[4]);
+        // column 11 (x), row 13 (y) [row][column] [y][x] Flip the order.
+        cells[13][11] = new Entrance(10,12, estates[4]);
 
         // ******************************************************
         // Top Square:
@@ -135,10 +156,6 @@ public class Board {
         }
     }
 
-    public void setCell(int row, int col, EstateCell estateCell) {
-        cells[row][col] = estateCell;
-    }
-
     /**
      * Prints a string representation of the game board to the console.
      * The representation includes the type of each cell and additional information for specific cells.
@@ -150,7 +167,8 @@ public class Board {
 
             for (int col = 0; col < 24; col++) {
                 if (cells[row][col] == null) {
-                    boardPrint.append("   "); // 3 characters.
+                    //boardPrint.append("   "); // 3 characters.
+                    boardPrint.append("nul"); // 3 characters.
                     continue;
                 }
                 // Haunted House:
@@ -161,56 +179,42 @@ public class Board {
                 }
                 // Manic Manor:
                 else if (row > 1 && row < 7 && col == 17) {
-                    // 15 total - 7 word = 8 remaining. So 4 left and 4 right
                     boardPrint.append(estates[1].getLine(row));
                     col = 22;
                 }
                 // Calamity Castle:
-                else if (row == 18 && col == 3) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append(" Calamit ");
-                    col = 6;
-                } else if (row == 19 && col == 3) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append("Castle   ");
-                    col = 6;
-                } else if (row == 20 && col == 3) {
-                    // 15 total
-                    boardPrint.append("         ");
-                    col = 6;
+                else if (row > 16 && row < 22 && col == 2) {
+                    // 15 total - 7 word = 8 remaining. So 4 left and 4 right
+                    boardPrint.append(estates[2].getLine(row));
+                    col = 7;
                 }
 
                 // Peril Palace:
-                else if (row == 18 && col == 18) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append(" Peril   ");
-                    col = 21;
-                } else if (row == 19 && col == 18) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append(" Palace  ");
-                    col = 21;
-                } else if (row == 20 && col == 18) {
-                    // 15 total
-                    boardPrint.append("         ");
-                    col = 21;
+                else if (row > 16 && row < 22 && col == 17) {
+                    boardPrint.append(estates[3].getLine(row));
+                    col = 22;
                 }
 
                 // Visitation Villa:
-                else if (row == 11 && col == 10) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append(" Visit      ");
-                    col = 14;
-                } else if (row == 12 && col == 10) {
-                    // 15 total - 5 word = 10 remaining. So 5 left and 5 right
-                    boardPrint.append(" Villa      ");
-                    col = 14;
+                else if (row > 10 && row < 13 && col == 9) {
+                    boardPrint.append(estates[4].getLine(row));
+                    col = 15;
                 }
-                boardPrint.append(cells[row][col] + "");
+                boardPrint.append(cells[row][col]);
 
             }
             boardPrint.append("\n");
         }
         System.out.print(boardPrint);
+
+        //DEBUG ONLY:
+        //"Lu Be Ma Pe "
+
+        System.out.print("DEBUG ONLY: estates[0].getPlayerStrings(): = ");
+        for(int i = 0; i < estates.length; i++){
+            System.out.print(i + " = " + estates[i].getPlayerStrings() + " | ");
+        }
+        System.out.println();
 
     }
 }

@@ -1,4 +1,4 @@
-package cluedo27_7;
+package cluedo30_7;
 
 /**
  * The Card class represents a generic card in Cluedo.

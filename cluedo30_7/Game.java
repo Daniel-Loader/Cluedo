@@ -1,4 +1,4 @@
-package cluedo27_7;
+package cluedo30_7;
 
 import java.util.*;
 /**
@@ -11,8 +11,8 @@ public class Game {
     private final Board board;
     private final Scanner scanner;
     private final List<Player> players;
-    private final ArrayList<Card> allCards;
-    private final List<Card> solution;
+    private final ArrayList<String> allCards;
+    private final ArrayList<String> solution;
 	
 
     /*
@@ -59,11 +59,11 @@ public class Game {
 	        }
 	    } while (!isValidInput);
 
-	    players.add(new Player("Lucilla", this, 1, 11));
-	    players.add(new Player("Bert", this, 9, 1));
-	    players.add(new Player("Malina", this, 22, 9));
+	    players.add(new Player("Lucilla", this, 3, 7));
+	    players.add(new Player("Bert", this, 5, 16));
+	    players.add(new Player("Malina", this, 18, 7));
 	    if (numPlayers == 4) {
-	        players.add(new Player("Percy", this, 14, 22));
+	        players.add(new Player("Percy", this, 20, 16));
 	    }
 
 	    for (int i = 0; i < numPlayers; i++) {
@@ -81,15 +81,60 @@ public class Game {
     public Player getPlayer(int i) {
     	return players.get(i);
     }
-    public Card getCard(String name) {
-        for (Card c : allCards) {
-            if (c.name().equals(name)) {
+    public String getCard(String name) {
+        for (String c : allCards) {
+            if (c.equals(name)) {
                 return c;
             }
         }
         throw new IllegalArgumentException(String.format("%s isn't a valid Card name", name));
     }
 
+    public String getSuspectCard() {
+        System.out.println("Enter a Suspect:");
+        for (String c : allCards.subList(0, 4)) {
+            System.out.println(c);
+        }
+        String suspectName = getScanner().next();
+        for (String c : allCards.subList(0, 4)) {
+            if (c.equals(suspectName)) {
+                return c;
+            }
+        }
+        System.out.printf("%s isn't a valid suspect Card name\n", suspectName);
+        return getSuspectCard();
+    }
+
+    public String getWeaponCard() {
+        System.out.println("Enter a Weapon:");
+        for (String c : allCards.subList(4, 9)) {
+            System.out.println(c);
+        }
+        String weaponName = getScanner().next();
+        for (String c : allCards.subList(4, 9)) {
+            if (c.equals(weaponName)) {
+                return c;
+            }
+        }
+        System.out.printf("%s isn't a valid weapon Card name\n", weaponName);
+        return getWeaponCard();
+    }
+
+    public String getEstateCard() {
+        System.out.println("Enter an Estate:");
+        for (String c : allCards.subList(9, 14)) {
+            System.out.println(c);
+        }
+        String estateName = getScanner().next();
+        for (String c : allCards.subList(9, 14)) {
+            if (c.equals(estateName)) {
+                return c;
+            }
+        }
+        System.out.printf("%s isn't a valid estate Card name\n", estateName);
+        return getEstateCard();
+    }
+    
     /**
      * Simulates a pair of die rolls by generating two random numbers between 1 and 6.
      *
@@ -119,62 +164,95 @@ public class Game {
         }
     }
 
-    /**
+    /*
      * Returns the next card of the specified type from the given list of cards.
      * The method removes the card from the list before returning it.
      *
      * @param cardType  The type of the card to retrieve.
      * @return The next card of the specified type, or null if no such card is
      * found.
-     */
+     *
     private Card getNextCardOfType(List<Card> cards, Card.Type cardType) {
         for (Card card : cards) {
             if (card.cardType() == cardType) {
-                boolean remove = cards.remove(card);
-                return card;
+                if (cards.remove(card)) return card;
+                else throw new IllegalArgumentException("Removing" + card + " not present in " + cards);
+
             }
         }
         throw new IllegalStateException("No card of specified type found");
     }
-
+    */
+ 
+ 
     /**
      * Returns the global solution for the game, which contains the actual suspect,
      * weapon, and estate.
      *
      * @return The global solution for the game.
      */
-    public List<Card> getGlobalSolution() {
-        allCards.add(new Card("Lucilla",          Card.Type.SUSPECT));
-        allCards.add(new Card("Bert",             Card.Type.SUSPECT));
-        allCards.add(new Card("Malina",           Card.Type.SUSPECT));
-        allCards.add(new Card("Percy",            Card.Type.SUSPECT));
-        allCards.add(new Card("Broom",            Card.Type.WEAPON));
-        allCards.add(new Card("Scissors",         Card.Type.WEAPON));
-        allCards.add(new Card("Knife",            Card.Type.WEAPON));
-        allCards.add(new Card("Shovel",           Card.Type.WEAPON));
-        allCards.add(new Card("Ipad",             Card.Type.WEAPON));
-        allCards.add(new Card("Haunted House",    Card.Type.ESTATE));
-        allCards.add(new Card("Manic Manor",      Card.Type.ESTATE));
-        allCards.add(new Card("Calamity Castle",  Card.Type.ESTATE));
-        allCards.add(new Card("Peril Palace",     Card.Type.ESTATE));
-        allCards.add(new Card("Visitation Villa", Card.Type.ESTATE));
-        Collections.shuffle(allCards);
+    public ArrayList<String> getGlobalSolution() {
+        allCards.add("Lucilla");         // 0
+        allCards.add("Bert"   );         // 1
+        allCards.add("Malina" );         // 2
+        allCards.add("Percy"  );         // 3
+        allCards.add("Broom"  );         // 4
+        allCards.add("Scissors");        // 5
+        allCards.add("Knife"   );        // 6
+        allCards.add("Shovel"  );        // 7
+        allCards.add("Ipad"    );        // 8
+        allCards.add("Haunted_House"   );// 9
+        allCards.add("Manic_Manor"     );//10
+        allCards.add("Calamity_Castle" );//11
+        allCards.add("Peril_Palace"    );//12
+        allCards.add("Visitation_Villa");//13
+        
+        Random random = new Random();
+        int culpritIndex = random.nextInt(4);
+        int weaponIndex  = random.nextInt(5)+4;
+        int houseIndex   = random.nextInt(5)+9;
+        ArrayList<String> solution = new ArrayList<>();
+        solution.add(allCards.get(culpritIndex));
+        solution.add(allCards.get(weaponIndex ));
+        solution.add(allCards.get(houseIndex  ));
+        
+        ArrayList<String> indices = new ArrayList<>();
+        for(int i =0;i<14;i++){
+            indices.add(String.valueOf(i));
+            
+        }
+        indices.remove(houseIndex  );
+        indices.remove(weaponIndex );
+        indices.remove(culpritIndex);
+        Collections.shuffle(indices);
+        int offset = random.nextInt(players.size());
+        for(int i = 0;i<11;i++){
+        int indexOfCard = Integer.parseInt(indices.get(i));   
+        getPlayer((i+offset) % players.size()).addToHand(allCards.get(indexOfCard));
 
-        ArrayList<Card> solution = new ArrayList<>(allCards);
-
+        }
         // Distribute the cards among the players
-        for (int i = 0; i < players.size(); i++) {
-            getPlayer(i).addToHand(getNextCardOfType(solution, Card.Type.WEAPON));
-            getPlayer(i).addToHand(getNextCardOfType(solution, Card.Type.ESTATE));
-            if (i < 4) {
-                getPlayer(i).addToHand(getNextCardOfType(solution, Card.Type.SUSPECT));
-            }
-        }
-        if (players.size() == 3) {
-            players.get(0).addToHand(getNextCardOfType(solution, Card.Type.WEAPON));
-            players.get(1).addToHand(getNextCardOfType(solution, Card.Type.ESTATE));
-        }
+
         return solution;
+    }
+
+    /**
+     * Checks if each player has a string matching any of the three in player's guess.
+     *              Lets players with more than one matching string choose which to share.
+     * @param guess A suspect, weapon and state the player believes committed the
+     *              crime with and within respectively.
+     * @return alibi - The first string matching an element in the players guess,
+     *              or null if no matching cards are found.
+     */
+    public String refute(ArrayList<String> guess) {
+        String alibi = null;
+        //TODO check if any player can refute the player's guess
+        return alibi;
+    }
+
+    public Boolean checkSolution(ArrayList<String> guess) {
+        // Get the actual solution from the game's globalSolution
+        return guess.containsAll(this.solution) && this.solution.containsAll(guess);
     }
 
     /**
@@ -199,5 +277,4 @@ public class Game {
 
         game.terminate();
     }
-
 }

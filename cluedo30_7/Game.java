@@ -13,7 +13,7 @@ public class Game {
     private final List<Player> players;
     private final ArrayList<String> allCards;
     private final ArrayList<String> solution;
-	
+
 
     /*
      * Constructs a new Game instance with an initialized board, 3-4 players,
@@ -28,113 +28,106 @@ public class Game {
         this.allCards = new ArrayList<>();
         this.solution = getGlobalSolution();
     }
-    public Board getBoard() {
+    public Board board() {
         return board;
     }
-    
-	public Scanner getScanner() {
-		return scanner;
-	}
+
+    public Scanner scanner() {
+        return scanner;
+    }
 
     /**
      * Asks the user how many players there are repeatedly until it gets
      * a valid answer. Then adds that many players to Game's list.
      */
-	private void addPlayers() {
-	    int numPlayers = 0;
-	    boolean isValidInput = false;
+    private void addPlayers() {
+        int numPlayers = 0;
+        boolean isValidInput = false;
 
-	    do {
-	        System.out.print("Enter the number of players (3 to 4): ");
-	        try {
-	            numPlayers = Integer.parseInt(getScanner().nextLine());
+        do {
+            System.out.print("Enter the number of players (3 to 4): ");
+            try {
+                numPlayers = Integer.parseInt(scanner().nextLine());
 
-	            if (numPlayers >= 3 && numPlayers <= 4) {
-	                isValidInput = true;
-	            } else {
-	                System.out.println("Invalid number of players. The number of players must be between 3 and 4.");
-	            }
-	        } catch (NumberFormatException e) {
-	            System.out.println("Invalid input. Please enter a valid number.");
-	        }
-	    } while (!isValidInput);
-
-	    players.add(new Player("Lucilla", this, 3, 7));
-	    players.add(new Player("Bert", this, 5, 16));
-	    players.add(new Player("Malina", this, 18, 7));
-	    if (numPlayers == 4) {
-	        players.add(new Player("Percy", this, 20, 16));
-	    }
-
-	    for (int i = 0; i < numPlayers; i++) {
-	        Player currentPlayer = getPlayer(i);
-	        // WARNING: this will cause an error if the player's initial position is not on a Path cell.
-	        Path currentPath = (Path) board.getCellAt(currentPlayer.row(), currentPlayer.column());
-	        currentPath.setPlayer(currentPlayer); //Set the player on the board cell.
-	    }
-	}
-    
-    public List<Player> getPlayers() {
-    	return List.copyOf(players);
-    }
-    
-    public Player getPlayer(int i) {
-    	return players.get(i);
-    }
-    public String getCard(String name) {
-        for (String c : allCards) {
-            if (c.equals(name)) {
-                return c;
+                if (numPlayers >= 3 && numPlayers <= 4) {
+                    isValidInput = true;
+                } else {
+                    System.out.println("Invalid number of players. The number of players must be between 3 and 4.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
             }
+        } while (!isValidInput);
+
+        players.add(new Player("Lucilla", this, 7, 5));
+        players.add(new Player("Bert", this, 5, 16));
+        players.add(new Player("Malina", this, 18, 7));
+        if (numPlayers == 4) {
+            players.add(new Player("Percy", this, 16, 18));
         }
-        throw new IllegalArgumentException(String.format("%s isn't a valid Card name", name));
+
+        for (int i = 0; i < numPlayers; i++) {
+            Player currentPlayer = player(i);
+            Cell currentPath = board.cellAt(currentPlayer.row(), currentPlayer.column());
+            currentPath.setPlayer(currentPlayer); //Set the player on the board cell.
+        }
     }
 
-    public String getSuspectCard() {
+    /**
+     * Getter method for the participants of this game.
+     *
+     * @param i the player's index.
+     * @return player - the chosen player;
+     */
+    private Player player(int i) {
+        return players.get(i);
+    }
+
+    public String suspectCard() {
         System.out.println("Enter a Suspect:");
         for (String c : allCards.subList(0, 4)) {
             System.out.println(c);
         }
-        String suspectName = getScanner().next();
+        String suspectName = scanner().next();
         for (String c : allCards.subList(0, 4)) {
             if (c.equals(suspectName)) {
                 return c;
             }
         }
         System.out.printf("%s isn't a valid suspect Card name\n", suspectName);
-        return getSuspectCard();
+        return suspectCard();
     }
 
-    public String getWeaponCard() {
+    public String weaponCard() {
         System.out.println("Enter a Weapon:");
         for (String c : allCards.subList(4, 9)) {
             System.out.println(c);
         }
-        String weaponName = getScanner().next();
+        String weaponName = scanner().next();
         for (String c : allCards.subList(4, 9)) {
             if (c.equals(weaponName)) {
                 return c;
             }
         }
         System.out.printf("%s isn't a valid weapon Card name\n", weaponName);
-        return getWeaponCard();
+        return weaponCard();
     }
 
-    public String getEstateCard() {
+    public String estateCard() {
         System.out.println("Enter an Estate:");
         for (String c : allCards.subList(9, 14)) {
             System.out.println(c);
         }
-        String estateName = getScanner().next();
+        String estateName = scanner().next();
         for (String c : allCards.subList(9, 14)) {
             if (c.equals(estateName)) {
                 return c;
             }
         }
         System.out.printf("%s isn't a valid estate Card name\n", estateName);
-        return getEstateCard();
+        return estateCard();
     }
-    
+
     /**
      * Simulates a pair of die rolls by generating two random numbers between 1 and 6.
      *
@@ -156,12 +149,21 @@ public class Game {
      * @param startingIndex The index of the player to start the game from.
      */
     public void clock(int startingIndex) {
-        Boolean gameOver = players.get(startingIndex).turn(roll(1));
-        for (int i = 1; !gameOver; i++) {
+        boolean gameOver = false;
+        for (int i = 0; !gameOver; i++) {
             int index = (startingIndex + i) % players.size(); // Loop back to the beginning when reaching the end
-            gameOver = players.get(index).turn(roll(i+1));
-
+            Player currentPlayer = players.get(index);
+            System.out.println("\n".repeat(100) + currentPlayer.name() +
+                    "'s Turn. \n Pass them the tablet then press any key + enter to start");
+            scanner.next();
+            if (currentPlayer.canSolve()) {
+                gameOver = currentPlayer.turn(roll(i+1));
+            }
+            else {
+                currentPlayer.turn(roll(i+1));
+            }
         }
+        terminate();
     }
 
     /*
@@ -183,8 +185,8 @@ public class Game {
         throw new IllegalStateException("No card of specified type found");
     }
     */
- 
- 
+
+
     /**
      * Returns the global solution for the game, which contains the actual suspect,
      * weapon, and estate.
@@ -206,7 +208,7 @@ public class Game {
         allCards.add("Calamity_Castle" );//11
         allCards.add("Peril_Palace"    );//12
         allCards.add("Visitation_Villa");//13
-        
+
         Random random = new Random();
         int culpritIndex = random.nextInt(4);
         int weaponIndex  = random.nextInt(5)+4;
@@ -215,11 +217,11 @@ public class Game {
         solution.add(allCards.get(culpritIndex));
         solution.add(allCards.get(weaponIndex ));
         solution.add(allCards.get(houseIndex  ));
-        
+
         ArrayList<String> indices = new ArrayList<>();
         for(int i =0;i<14;i++){
             indices.add(String.valueOf(i));
-            
+
         }
         indices.remove(houseIndex  );
         indices.remove(weaponIndex );
@@ -227,11 +229,9 @@ public class Game {
         Collections.shuffle(indices);
         int offset = random.nextInt(players.size());
         for(int i = 0;i<11;i++){
-        int indexOfCard = Integer.parseInt(indices.get(i));   
-        getPlayer((i+offset) % players.size()).addToHand(allCards.get(indexOfCard));
-
+            int indexOfCard = Integer.parseInt(indices.get(i));
+            player((i+offset) % players.size()).addToHand(allCards.get(indexOfCard));
         }
-        // Distribute the cards among the players
 
         return solution;
     }
@@ -244,9 +244,20 @@ public class Game {
      * @return alibi - The first string matching an element in the players guess,
      *              or null if no matching cards are found.
      */
-    public String refute(ArrayList<String> guess) {
+    public String refute(Player guesser, ArrayList<String> guess) {
         String alibi = null;
-        //TODO check if any player can refute the player's guess
+        players.remove(guesser);
+        for (Player p : players) {
+            System.out.println("\n".repeat(100) + p.name() +
+                    "'s Turn to refute. \n Pass them the tablet then press any key + enter to start");
+            scanner.next();
+            if (alibi == null) {
+                alibi = p.refute(guess);
+            } else {
+                p.refute(guess);
+            }
+        }
+        players.add(guesser);
         return alibi;
     }
 
@@ -259,6 +270,8 @@ public class Game {
      * Closes all open resources, such as the Scanner, at the end of the game.
      */
     public void terminate() {
+        System.out.printf("%s did in fact commit murder with a %s in %s\n",
+                solution.get(0), solution.get(1), solution.get(2));
         scanner.close();
     }
 

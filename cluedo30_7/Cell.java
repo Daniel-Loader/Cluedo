@@ -1,5 +1,8 @@
 package cluedo30_7;
 
+/**
+ * The cell interface lists the common methods of all cell implementations.
+ */
 public interface Cell {
 	/**
 	 * Creates a copy of the Cell.
@@ -13,22 +16,14 @@ public interface Cell {
 	 *
 	 * @return The row index of the Cell.
 	 */
-	int getRow();
+	int row();
 
 	/**
 	 * Gets the column index of the Cell on the game board.
 	 *
 	 * @return The column index of the Cell.
 	 */
-	int getColumn();
-
-	/**
-	 * Checks if the Cell contains a specific player.
-	 *
-	 * @param p The Player to check for presence in the Cell.
-	 * @return true if the Cell contains the specified player, false otherwise.
-	 */
-	Boolean contains(Player p);
+	int column();
 
 	/**
 	 * Checks if the Cell is passable, i.e., if a player can move to this Cell.
@@ -38,6 +33,14 @@ public interface Cell {
 	Boolean isPassable();
 
 	/**
+	 * Checks if a player is in the Cell.
+	 *
+	 * @param player The Player to check for.
+	 * @return has   whether the player is present.
+	 */
+	boolean hasPlayer(Player player);
+
+	/**
 	 * Sets a player in the Cell.
 	 *
 	 * @param player The Player to set in the Cell.
@@ -45,11 +48,12 @@ public interface Cell {
 	void setPlayer(Player player);
 
 	/**
-	 * Removes a player from the Cell.
+	 * Removes a player from the Path cell.
 	 *
-	 * @param player The Player to remove from the Cell.
+	 * @param p the player to remove.
+	 * @throws IllegalArgumentException if the specified Player is not in this cell.
 	 */
-	void removePlayer(Player player);
+	void removePlayer(Player p);
 }
 
 /**
@@ -87,7 +91,7 @@ final class Path implements Cell {
 	 * @return the Cell's Y coordinate.
 	 */
 	@Override
-	public int getRow() {
+	public int row() {
 		return row;
 	}
 
@@ -97,12 +101,12 @@ final class Path implements Cell {
 	 * @return the Cell's X coordinate.
 	 */
 	@Override
-	public int getColumn() {
-		return column;
-	}/**
+	public int column() {return column;}
+
+	/**
 	 * Returns if the player can step into the cell.
 	 *
-	 * @return
+	 * @return if there is room for a player
 	 */
 	public Boolean isPassable() {
 
@@ -115,7 +119,7 @@ final class Path implements Cell {
 	 * @param p The Player to check for presence in the Cell.
 	 * @return true if the player is present, false otherwise
 	 */
-	public Boolean contains(Player p){return player.equals(p);}
+	public boolean hasPlayer(Player p){return player.equals(p);}
 
 	/**
 	 * Adds a player if there is room
@@ -134,14 +138,14 @@ final class Path implements Cell {
 	/**
 	 * Removes a player from the Path cell.
 	 *
-	 * @param p The Player to remove from the Path cell.
+	 * @param p the player to remove.
 	 * @throws IllegalArgumentException if the specified Player is not in this cell.
 	 */
 	public void removePlayer(Player p){
-		if (p == player) {
-			player = null;
+		if (player != p) {
+			throw new IllegalArgumentException(p.name() + " is not in this cell");
 		} else {
-			throw new IllegalArgumentException("that Player is not in this cell");
+			player = null;
 		}
 	}
 
@@ -174,7 +178,29 @@ final class Entrance implements Cell {
 		this.estate = estate;
 	}
 
-	public Cell getEstate() { return estate; }
+	/**
+	 * Getter method for Row
+	 *
+	 * @return the Cell's Y coordinate.
+	 */
+	@Override
+	public int row() { return row; }
+
+	/**
+	 * Getter method for Column
+	 *
+	 * @return the Cell's X coordinate.
+	 */
+	@Override
+	public int column() { return column; }
+
+
+	/**
+	 * Getter Method for estate
+	 *
+	 * @return the estate this entrance belongs to
+	 */
+	public Estate estate() { return estate; }
 
 	/**
 	 * Returns a deep copy of the Cell.
@@ -187,25 +213,9 @@ final class Entrance implements Cell {
 	}
 
 	/**
-	 * Getter method for Row
-	 *
-	 * @return the Cell's Y coordinate.
-	 */
-	@Override
-	public int getRow() { return row; }
-
-	/**
-	 * Getter method for Column
-	 *
-	 * @return the Cell's X coordinate.
-	 */
-	@Override
-	public int getColumn() { return column; }
-
-	/**
 	 * Returns if the player can step into the Cell.
 	 *
-	 * @return
+	 * @return if there is room for a player
 	 */
 	public Boolean isPassable() {return player == null; }
 
@@ -215,7 +225,7 @@ final class Entrance implements Cell {
 	 * @param p The Player to check for presence in the Cell.
 	 * @return true if the player is present, false otherwise
 	 */
-	public Boolean contains(Player p){return player.equals(p);}
+	public boolean hasPlayer(Player p){return player.equals(p);}
 
 	/**
 	 * Method to add player to the entrance's estate.
@@ -226,7 +236,7 @@ final class Entrance implements Cell {
 	@Override
 	public void setPlayer(Player p) {
 		if (this.player == null) {
-			estate.addOccupant(p);
+			estate.setPlayer(p);
 		} else {
 			throw new IllegalArgumentException("Overloading Entrance of" + estate.toString());
 		}
@@ -242,16 +252,16 @@ final class Entrance implements Cell {
 	public void removePlayer(Player p) {
 		if (p == player) {
 			player = null;
-		} else if (estate.contains(p)) {
+		} else if (estate.hasPlayer(p)) {
 			estate.removePlayer(p);
 		} else {
-			throw new IllegalArgumentException(player.getName() + "is not in this estate");
+			throw new IllegalArgumentException(player.name() + "is not in this estate");
 		}
 	}
 
 	/**
 	 * String representation of an entrance.
-	 * @return 3 spaces if not overridden by estate's getLine() method.
+	 * @return 3 spaces if not overridden by estate's line() method.
 	 */
 	@Override
 	public String toString() {
@@ -277,7 +287,7 @@ final class Wall implements Cell {
 	 * @throws IllegalArgumentException if called.
 	 */
 	@Override
-	public int getRow() {
+	public int row() {
 		throw new IllegalArgumentException("Shouldn't be checking a Wall's location");
 	}
 
@@ -286,18 +296,18 @@ final class Wall implements Cell {
 	 * @throws IllegalArgumentException if called.
 	 */
 	@Override
-	public int getColumn() {
+	public int column() {
 		throw new IllegalArgumentException("Shouldn't be checking a Wall's location");
 	}
 
 	/**
-	 * Checks 
+	 * Checks if there is room for a player.
 	 *
 	 * @param p The Player to check for presence in the Cell.
-	 * @return
+	 * @return false - Walls can't contain players.
 	 */
 
-	public Boolean contains(Player p) {
+	public boolean hasPlayer(Player p) {
 		return false;
 	}
 

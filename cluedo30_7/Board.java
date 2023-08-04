@@ -2,6 +2,9 @@ package cluedo30_7;
 
 import java.util.Map;
 
+/**
+ * The Board class handles initialising and printing the Hobby Detectives board.
+ */
 public class Board {
     private final int numRows;
     private final int numCols;
@@ -16,10 +19,7 @@ public class Board {
      */
     private final Estate[] estates = new Estate[5];
     public Estate[] estates(){return estates;}
-    public static final String WALLSTRING = "###";
-    /**
-     * An enumeration that specifies the direction (UP, DOWN, LEFT, RIGHT) used for entrances in the estate.
-     */
+    public static final String WALLSTRING = "##|";
     public enum Direction { UP, DOWN, LEFT, RIGHT }
 
     /**
@@ -37,11 +37,28 @@ public class Board {
         this.initializeCells();
     }
 
-    public Cell getCellAt(int row, int col) {
+    /**
+     * Getter method for Cells
+     *
+     * @param row   the Y coordinate of the desired cell
+     * @param col   the X coordinate of the desired cell
+     * @return Cell the desired Cell
+     */
+    public Cell cellAt(int row, int col) {
         return cells[row][col];
     }
 
-    public void fill(int startRow, int startCol, int endRow, int endCol, Cell cell) {
+    /**
+     * Fills a rectangular area with the specified cell type within the given range of rows and columns.
+     *
+     * @param startRow The starting row index (inclusive) of the area to fill.
+     * @param startCol The starting column index (inclusive) of the area to fill.
+     * @param endRow The ending row index (exclusive) of the area to fill.
+     * @param endCol The ending column index (exclusive) of the area to fill.
+     * @param cell The type of cell to fill the area with.
+     * @throws IllegalArgumentException if the provided range is invalid (out of bounds).
+     */
+    private void fill(int startRow, int startCol, int endRow, int endCol, Cell cell) {
         if (startRow > endRow || endRow > numRows || startCol > endCol || endCol > numCols) {
             throw new IllegalArgumentException();
         }
@@ -52,9 +69,12 @@ public class Board {
         }
     }
 
+    /**
+     * Initializes the cells of the board and sets up the estates and entrances.
+     */
     private void initializeCells() {
-        for (int row = 0; row < 24; row++) {
-            for (int col = 0; col < 24; col++) {
+        for (int row = 0; row < numRows; row++) {
+            for (int col = 0; col < numCols; col++) {
                 cells[row][col] = new Path(row, col);
             }
         }
@@ -172,32 +192,32 @@ public class Board {
                     continue;
                 }
                 // Haunted House:
-                else if (row > 1 && row < 7 && col == 2) {
+                else if (row >= 2 && row < 7 && col == 2) {
                     // 15 total - 7 word = 8 remaining. So 4 left and 4 right
-                    boardPrint.append(estates[0].getLine(row));
+                    boardPrint.append(estates[0].line(row));
                     col = 7;
                 }
                 // Manic Manor:
-                else if (row > 1 && row < 7 && col == 17) {
-                    boardPrint.append(estates[1].getLine(row));
+                else if (row >= 2 && row < 7 && col == 17) {
+                    boardPrint.append(estates[1].line(row));
                     col = 22;
                 }
                 // Calamity Castle:
-                else if (row > 16 && row < 22 && col == 2) {
+                else if (row >= 17 && row < 22 && col == 2) {
                     // 15 total - 7 word = 8 remaining. So 4 left and 4 right
-                    boardPrint.append(estates[2].getLine(row));
+                    boardPrint.append(estates[2].line(row));
                     col = 7;
                 }
 
                 // Peril Palace:
-                else if (row > 16 && row < 22 && col == 17) {
-                    boardPrint.append(estates[3].getLine(row));
+                else if (row >= 17 && row < 22 && col == 17) {
+                    boardPrint.append(estates[3].line(row));
                     col = 22;
                 }
 
                 // Visitation Villa:
-                else if (row > 10 && row < 13 && col == 9) {
-                    boardPrint.append(estates[4].getLine(row));
+                else if (row >= 10 && row < 14 && col == 9) {
+                    boardPrint.append(estates[4].line(row));
                     col = 15;
                 }
                 boardPrint.append(cells[row][col]);
@@ -207,14 +227,14 @@ public class Board {
         }
         System.out.print(boardPrint);
 
-        //DEBUG ONLY:
+        /*DEBUG ONLY:
         //"Lu Be Ma Pe "
 
-        System.out.print("DEBUG ONLY: estates[0].getPlayerStrings(): = ");
+        System.out.print("DEBUG ONLY: estates[0].playerStrings(): = ");
         for(int i = 0; i < estates.length; i++){
-            System.out.print(i + " = " + estates[i].getPlayerStrings() + " | ");
+            System.out.print(i + " = " + estates[i].playerStrings() + " | ");
         }
         System.out.println();
-
+        */
     }
 }
